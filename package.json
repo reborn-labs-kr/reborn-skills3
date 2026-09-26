@@ -1,6 +1,6 @@
 {
   "name": "reborn-skills3",
-  "version": "1.0.4",
+  "version": "1.0.5",
   "description": "산 스킬팩3(SNS 올인원)을 한 줄로 설치합니다 — 스킬 파일을 재배포하지 않고 각 제작자의 공식 설치 명령을 대신 실행하고, 저희가 만든 지휘 스킬과 발동기까지 넣습니다. 결제 후 받은 주문번호가 필요합니다",
   "keywords": [
     "claude",
@@ -32,6 +32,7 @@
     "install.mjs",
     "발동기3.md",
     "발동기3.en.md",
+    "발동기3.ja.md",
     "README.md",
     "LICENSE"
   ],

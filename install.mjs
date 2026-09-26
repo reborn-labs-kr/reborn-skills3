@@ -101,7 +101,11 @@ export function 이름뽑기(텍스트) {
   //   이름이 `\x1b[36mhumanizer` 로 잡혀 **전건 실패**한다(팩1에서 실제로 겪었다).
   //   막는 자리가 하나뿐이면 그 자리를 안 거치는 길이 생기는 날 조용히 무너진다.
   for (const l of String(텍스트 || "").replace(/\x1b\[[0-9;]*m/g, "").split(/\r?\n/)) {
-    const m = l.match(/^\s*([A-Za-z0-9][A-Za-z0-9_\-.]*)\s{2,}/) || l.match(/^\s*([A-Za-z0-9][A-Za-z0-9_\-.]*)\s*$/);
+    /* ★묶음에 스킬이 하나뿐이면 `skills list` 는 이름 뒤에 **빈칸 한 칸**만 두고 경로를 붙인다
+         (2026-09-26 종단 시험 — `karpathy-guidelines C:\\Users\\…`). 두 칸만 보던 판정이
+         그런 스킬을 전부 「파일은 있는데 목록에 안 뜹니다」로 적었다. → 이름 뒤에 경로가 오면 잡는다. */
+    const m = l.match(/^\s*([A-Za-z0-9][A-Za-z0-9_\-.]*)\s+(?:[A-Za-z]:[\\/]|\/|~)/)
+      || l.match(/^\s*([A-Za-z0-9][A-Za-z0-9_\-.]*)\s{2,}/) || l.match(/^\s*([A-Za-z0-9][A-Za-z0-9_\-.]*)\s*$/);
     if (m) 결과.push(m[1]);
   }
   return [...new Set(결과)];
@@ -295,6 +299,8 @@ function 자기시험돌리기() {
   T("★★npx 를 실제로 부를 수 있다 (윈도우 EINVAL 재발 방지)", (() => { const r = 돌리기(["--version"], 60000); return r.status === 0 && /\d+\.\d+/.test(String(r.stdout)); })());
   T("[역시험] 따옴 — 빈칸 든 인자는 싼다", 따옴("a b") === '"a b"' && 따옴("pbakaus/impeccable") === "pbakaus/impeccable");
   T("[역시험] 이름뽑기가 빈 글에서 0개", 이름뽑기("").length === 0);
+  T("★이름뽑기 — 빈칸 한 칸 뒤 윈도우 경로(묶음에 하나뿐인 스킬)", 이름뽑기("  karpathy-guidelines C:\\Users\\a\\.claude\\skills\\karpathy-guidelines\n").includes("karpathy-guidelines"));
+  T("★이름뽑기 — 빈칸 한 칸 뒤 유닉스 경로", 이름뽑기("  humanizer /home/a/.claude/skills/humanizer\n").includes("humanizer"));
   T("[역시험] 이름뽑기가 색 코드를 걷어낸 뒤 잡는다", 이름뽑기("\x1b[36mhumanizer\x1b[0m   /x\n").includes("humanizer"));
   T("[역시험] 없는 스킬은 파일로있나가 false", 파일로있나("이런스킬은없다-xyz") === false);
   T("[역시험] 상태()가 둘 다 없으면 '없음'", 상태({ skill: "없다-xyz" }, { 이름들: [] }).급 === "없음");

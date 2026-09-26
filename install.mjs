@@ -504,8 +504,13 @@ async function 묶음깔기(묶음) {
     mkdirSync(스킬자리, { recursive: true });
     for (const f of 폴더들) cpSync(join(뿌리, f), join(스킬자리, f), { recursive: true, force: true });
     const 확인 = 폴더들.filter((f) => 파일로있나(f));
-    return { ok: 폴더들.length > 0 && 확인.length === 폴더들.length, 폴더들, 확인,
-      말: `${확인.length}/${폴더들.length}개 깔렸습니다` };
+    /* ★서버가 말한 개수와 대조한다 — 묶음을 잘못 올려 1개만 들어 있어도 「1/1개」로 성공처럼 보였다
+       (2026-09-26 코덱스 교차검수 3차). 개수를 안 주는 옛 서버면 이 대조는 건너뛴다. */
+    const 기대 = Number(묶음.개수) || 0;
+    const 모자람 = 기대 > 0 && 확인.length < 기대;
+    return { ok: 폴더들.length > 0 && 확인.length === 폴더들.length && !모자람, 폴더들, 확인,
+      말: 모자람 ? `${확인.length}/${기대}개만 깔렸습니다 — 묶음이 덜 들어 있습니다. 화면을 캡처해 고객센터로 보내 주세요`
+        : `${확인.length}/${기대 || 폴더들.length}개 깔렸습니다` };
   } catch (e) {
     return { ok: false, 말: `묶음을 깔지 못했습니다(${e?.message || "?"})` };
   } finally {

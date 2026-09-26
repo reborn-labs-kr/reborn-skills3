@@ -74,9 +74,16 @@ const 원 = (n) => Number(n).toLocaleString("ko-KR");
 const 줄 = (s = "") => console.log(s);
 
 /* ── 바깥 명령 ──────────────────────────────────────────────────────── */
-const npx = () => (process.platform === "win32" ? "npx.cmd" : "npx");
+/* ★★윈도우에서는 **셸을 거쳐야** npx 가 뜬다 (2026-09-26 종단 시험에서 잡음).
+     노드 18.20·20.12 부터 보안 수정으로 `.cmd` 를 셸 없이 spawn 하면 EINVAL 로 **즉사**한다 —
+     출력 0줄·종료코드 null 이라 설치기는 모든 스킬을 「아직 없습니다」로만 적었다.
+     팩1 설치기(reborn-skills-all)는 처음부터 셸을 거쳐서 이 병이 없었다.
+     인자는 우리 서버가 주는 `skills add <저장소> --skill <이름>` 뿐이지만, 그래도 따옴표로 싼다. */
+export const 따옴 = (a) => (/^[A-Za-z0-9@._\/:=+-]+$/.test(String(a)) ? String(a) : `"${String(a).replace(/"/g, '\\"')}"`);
 const 돌리기 = (args, timeout = 600000) =>
-  spawnSync(npx(), args, { encoding: "utf8", timeout, windowsHide: true });
+  process.platform === "win32"
+    ? spawnSync(`npx ${args.map(따옴).join(" ")}`, { encoding: "utf8", timeout, windowsHide: true, shell: true })
+    : spawnSync("npx", args, { encoding: "utf8", timeout, windowsHide: true });
 
 let _목록캐시 = null;
 function 설치목록(다시 = false) {
@@ -285,6 +292,8 @@ function 자기시험돌리기() {
     } finally { rmSync(d, { recursive: true, force: true }); }
   })());
 
+  T("★★npx 를 실제로 부를 수 있다 (윈도우 EINVAL 재발 방지)", (() => { const r = 돌리기(["--version"], 60000); return r.status === 0 && /\d+\.\d+/.test(String(r.stdout)); })());
+  T("[역시험] 따옴 — 빈칸 든 인자는 싼다", 따옴("a b") === '"a b"' && 따옴("pbakaus/impeccable") === "pbakaus/impeccable");
   T("[역시험] 이름뽑기가 빈 글에서 0개", 이름뽑기("").length === 0);
   T("[역시험] 이름뽑기가 색 코드를 걷어낸 뒤 잡는다", 이름뽑기("\x1b[36mhumanizer\x1b[0m   /x\n").includes("humanizer"));
   T("[역시험] 없는 스킬은 파일로있나가 false", 파일로있나("이런스킬은없다-xyz") === false);

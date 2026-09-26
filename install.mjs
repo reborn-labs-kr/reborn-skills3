@@ -350,13 +350,13 @@ const 답 = await 받아오기(토큰);
 if (!답.ok) {
   줄(`\n${c.r}${답.이유 || "주문번호를 확인하지 못했습니다."}${c[0]}`);
   줄(`${c.d}막히시면 화면을 그대로 캡처해 보내 주세요 — ${CS}${c[0]}\n`);
-  process.exit(1);
+  process.exitCode = 1; return;   // fetch 뒤다 — exit() 로 끊지 않는다(맨 끝 주석)
 }
 
 const 스킬들 = Array.isArray(답.skills) ? 답.skills : [];
 if (!스킬들.length) {
   줄(`\n${c.r}받을 스킬 목록이 비어 있습니다. 고객센터로 알려 주세요 — ${CS}${c[0]}\n`);
-  process.exit(1);
+  process.exitCode = 1; return;   // fetch 뒤다 — exit() 로 끊지 않는다(맨 끝 주석)
 }
 
 줄(`${c.d}${답.packLabel || "스킬팩3"} · ${스킬들.length}종 · 남은 설치 ${답.remaining}회 (${답.windowDays}일 기준)${c[0]}`);
@@ -460,5 +460,8 @@ if (!확인만 && 답.runId) {
   });
 }
 
-process.exit(막힘.length ? 1 : 0);
+/* ★★process.exit() 로 끊지 않는다 (2026-09-26 종단 시험). 윈도우 노드는 fetch 직후 강제 종료하면
+     `Assertion failed: !(handle->flags & UV_HANDLE_CLOSING) … async.c` 를 찍고 0xC0000409 로 죽는다 —
+     설치는 다 끝났는데 고객 화면 마지막 줄이 오류가 된다. 종료코드만 정하고 저절로 끝나게 둔다. */
+process.exitCode = 막힘.length ? 1 : 0;
 }
